@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 
 # colors
@@ -98,6 +98,18 @@ if [ "$me" == "root" ]; then
     # set block devices
     printlnYellow "Setting number of block devices..."
     echo "options zram num_devices=$numberOfZramDevices" > "$modprobeDir/$modulesZramConf"
+    
+    # set zram size
+    udevRulesDir="/etc/udev/rules.d"
+    printlnYellow "Setting zram size..."
+    
+    echo "" > "$udevRulesDir/10-zram.rules"
+    for ((i = 0; i < $numberOfZramDevices; i++))
+    do
+        diskSize=$zramSize"M"
+        mkswapLocation="$(command -v mkswap)"
+        echo "KERNEL==\"zram$i\", ATTR{comp_algorithm}=\"lz4\", ATTR{disksize}=\"$diskSize\" RUN=\"$mkswapLocation /dev/zram$i\"" >> "$udevRulesDir/10-zram.rules"
+    done
     
     
 else
