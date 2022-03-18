@@ -111,6 +111,27 @@ if [ "$me" == "root" ]; then
         echo "KERNEL==\"zram$i\", ATTR{comp_algorithm}=\"lz4\", ATTR{disksize}=\"$diskSize\" RUN=\"$mkswapLocation /dev/zram$i\"" >> "$udevRulesDir/10-zram.rules"
     done
     
+    # create backup dir
+    printlnYellow "Creating backup directory..."
+    backupDir="/etc/SimpleZramConfig/fstab/backup"
+    
+    # if dir not exists
+    if ! [ -d "$backupDir" ]; then
+        mkdir -p "$backupDir"
+    fi
+    
+    # if fstab backup not exists
+    ! test -f "$backupDir/fstab" && cp -r "/etc/fstab" "$backupDir/" && printlnGreen "Success created backup files..." && cp -r "/etc/fstab" "$backupDir/fstab.old"
+    
+    # save zram config to fstab
+    printlnYellow "Saving zram config to fstab..."
+    defaultFstab="$(cat $backupDir/fstab)"
+    echo "$defaultFstab" > "/etc/fstab"
+    for ((i = 0; i < $numberOfZramDevices; i++))
+    do
+        echo "/dev/zram$i none swap defaults 0 0" >> "/etc/fstab"
+    done
+    
     
 else
     echo "Permission denied, please run as root!"
