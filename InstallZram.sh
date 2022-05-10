@@ -102,7 +102,7 @@ if [ "$me" == "root" ]; then
             zramPriority="$i"
             
         # check is number
-        elif [ $zramPriority =~ $regexNumber ]; then
+        elif ! [[ $zramPriority =~ $regexNumber ]]; then
             printlnRed "$zramPriority Not a number!"
             exit 1
         fi
