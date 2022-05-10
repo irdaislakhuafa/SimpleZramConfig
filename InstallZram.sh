@@ -87,9 +87,32 @@ if [ "$me" == "root" ]; then
     printlnYellow "Saving zram config to fstab..."
     defaultFstab="$(cat $backupDir/fstab)"
     echo "$defaultFstab" > "/etc/fstab"
+
+    # and set priority
+    zramPriority=""
+    minPriority=-1
+    maxPriority=32767
     for ((i = 0; i < $numberOfZramDevices; i++))
     do
-        echo "/dev/zram$i none swap defaults 0 0" >> "/etc/fstab"
+        printYellow "Set priority for zram$i (default $i in range $minPriority to $maxPriority) : "
+        read zramPriority
+
+        # check is priority valid
+        if [ "$zramPriority" == "" ]; then
+            zramPriority="$i"
+            
+        # check is number
+        elif [ $zramPriority =~ $regexNumber ]; then
+            printlnRed "$zramPriority Not a number!"
+            exit 1
+        fi
+
+        if [ $zramPriority -lt $minPriority ] || [ $zramPriority -gt $maxPriority ]; then
+            printlnRed "Cannot set priority with value $zramPriority! allowed range is ($minPriority to $maxPriority)"
+            exit 1
+        fi
+
+        echo "/dev/zram$i none swap defaults,pri=$zramPriority 0 0" >> "/etc/fstab"
     done
     
     printlnGreen "Installing zram success!"
